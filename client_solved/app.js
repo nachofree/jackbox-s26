@@ -3,7 +3,11 @@
  * All fetch() calls implemented using .then() / .catch() only.
  */
 
-const API_BASE = "http://localhost:5001";
+// Instructor's backend. Use window.location.origin when serving this app from the same server.
+var origin = window.location.origin;
+var API_BASE = (origin && origin !== 'null') ? origin : 'https://unpopulously-ungrimed-pilar.ngrok-free.dev';
+// Required when API_BASE is an ngrok URL (bypasses interstitial). Included in all fetch() calls.
+var NGROK_HEADER = { 'ngrok-skip-browser-warning': '1' };
 
 let playerId = null;
 let playerName = null;
@@ -16,7 +20,7 @@ let currentRoundId = null;
 function joinGame(name) {
   fetch(API_BASE + '/api/join', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER),
     body: JSON.stringify({ name: name }),
   })
     .then(function (response) {
@@ -53,9 +57,24 @@ function showJoinError(message) {
 // pollState()
 // -----------------------------------------------------------------------------
 function pollState() {
-  fetch(API_BASE + '/api/state')
+  fetch(API_BASE + '/api/state', { headers: NGROK_HEADER })
     .then(function (response) {
-      return response.json();
+      return response.text().then(function (text) {
+        var data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.warn('pollState: server returned non-JSON (status ' + response.status + '). First 300 chars:', text.slice(0, 300));
+          if (text.indexOf('ngrok') !== -1) {
+            throw new Error('Ngrok interstitial: API request got the warning page. Open ' + API_BASE + '/api/state in this tab, click through if needed, then refresh the app.');
+          }
+          throw new Error('Server returned non-JSON. Check console for response body.');
+        }
+        if (!response.ok) {
+          throw new Error(data.error || 'Request failed');
+        }
+        return data;
+      });
     })
     .then(function (data) {
       currentRoundId = data.round_id;
@@ -68,8 +87,10 @@ function pollState() {
       document.getElementById('guess-area').hidden = data.phase !== 'GUESS';
       document.getElementById('results-area').hidden = data.phase !== 'RESULTS';
     })
-    .catch(function () {
-      document.getElementById('phase-display').textContent = 'Could not load state';
+    .catch(function (err) {
+      document.getElementById('phase-display').textContent = err.message || 'Could not load state';
+      document.getElementById('phase-display').title = err.message || '';
+      console.warn('pollState failed:', err);
     });
 }
 
@@ -89,7 +110,7 @@ function submitAnswer() {
 
   fetch(API_BASE + '/api/answer', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER),
     body: JSON.stringify({
       player_id: playerId,
       round_id: currentRoundId,
@@ -124,7 +145,7 @@ function submitGuess() {
 
   fetch(API_BASE + '/api/guess', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER),
     body: JSON.stringify({
       player_id: playerId,
       round_id: currentRoundId,
@@ -155,7 +176,7 @@ function submitGuess() {
 function fetchResults() {
   const resultsEl = document.getElementById('results');
 
-  fetch(API_BASE + '/api/results?round_id=' + currentRoundId)
+  fetch(API_BASE + '/api/results?round_id=' + currentRoundId, { headers: NGROK_HEADER })
     .then(function (response) {
       return response.json().then(function (data) {
         if (response.ok) {
@@ -185,3 +206,7 @@ document.getElementById('btn-join').addEventListener('click', function () {
 document.getElementById('btn-submit-answer').addEventListener('click', submitAnswer);
 document.getElementById('btn-submit-guess').addEventListener('click', submitGuess);
 document.getElementById('btn-fetch-results').addEventListener('click', fetchResults);
+
+if (window.location.protocol === 'file:') {
+  document.getElementById('file-warning').style.display = 'block';
+}

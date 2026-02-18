@@ -1,11 +1,13 @@
 /**
  * Majority Rules – Student client
  * Complete the TODO blocks by implementing fetch() calls using .then() and .catch() only.
- * Use the API_BASE constant; do not hardcode localhost elsewhere.
+ * Use the API_BASE constant; do not hardcode URLs elsewhere.
  */
 
-// Base URL for the API. Use this for all requests (e.g. API_BASE + '/api/join').
-const API_BASE = window.location.origin;
+// Instructor's backend (students develop locally and hit this). Change to window.location.origin if serving the client from the same server.
+var API_BASE = 'https://unpopulously-ungrimed-pilar.ngrok-free.dev';
+// Required when API_BASE is an ngrok URL (bypasses ngrok interstitial). Include in every fetch() headers object.
+var NGROK_HEADER = { 'ngrok-skip-browser-warning': '1' };
 
 // -----------------------------------------------------------------------------
 // State (set after join)
@@ -23,7 +25,7 @@ let pollInterval = null;
 function joinGame(name) {
   // TODO: use fetch() to POST to API_BASE + '/api/join'
   // Body: JSON.stringify({ name: name })
-  // Headers: { 'Content-Type': 'application/json' }
+  // Headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER)
   // Parse response with .json(), check for player_id, then:
   //   playerId = data.player_id;
   //   playerName = data.name;
@@ -52,8 +54,8 @@ function showJoinError(message) {
 // Update the UI: phase display, prompt display, show/hide answer/guess/results areas.
 // -----------------------------------------------------------------------------
 function pollState() {
-  // TODO: use fetch() to GET API_BASE + '/api/state'
-  // Parse JSON, then update:
+  // TODO: use fetch(API_BASE + '/api/state', { headers: NGROK_HEADER })
+  // then .then(r => r.json()). Parse JSON, then update:
   //   document.getElementById('phase-display').textContent = 'Phase: ' + data.phase + '  Round ' + data.round_id + '/' + data.round_total;
   //   document.getElementById('prompt-display').textContent = data.prompt || '—';
   //   Show/hide #answer-area (phase === 'ANSWER'), #guess-area (phase === 'GUESS'), #results-area (phase === 'RESULTS')
@@ -78,7 +80,7 @@ function submitAnswer() {
   if (!answer) return;
   // TODO: use fetch() to POST to API_BASE + '/api/answer'
   // Body: JSON.stringify({ player_id: playerId, round_id: currentRoundId, answer: answer })
-  // Headers: { 'Content-Type': 'application/json' }
+  // Headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER)
   // On success: clear input, set #answer-status to "Answer submitted"
   // On error (e.g. 409): read JSON and show data.error in #answer-status with class "status error"
 }
@@ -93,7 +95,7 @@ function submitGuess() {
   if (!guess) return;
   // TODO: use fetch() to POST to API_BASE + '/api/guess'
   // Body: JSON.stringify({ player_id: playerId, round_id: currentRoundId, guess: guess })
-  // Headers: { 'Content-Type': 'application/json' }
+  // Headers: Object.assign({ 'Content-Type': 'application/json' }, NGROK_HEADER)
   // On success: clear input, set #guess-status to "Guess submitted"
   // On error: show data.error in #guess-status with class "status error"
 }
@@ -104,7 +106,7 @@ function submitGuess() {
 // Display the returned breakdown and majority_answers in #results (e.g. JSON.stringify(data, null, 2)).
 // -----------------------------------------------------------------------------
 function fetchResults() {
-  // TODO: use fetch() to GET API_BASE + '/api/results?round_id=' + currentRoundId
+  // TODO: use fetch(API_BASE + '/api/results?round_id=' + currentRoundId, { headers: NGROK_HEADER })
   // Parse JSON, then set document.getElementById('results').textContent = JSON.stringify(data, null, 2);
   // On error (e.g. 409): show message that results are not available yet
 }
@@ -124,3 +126,7 @@ document.getElementById('btn-join').addEventListener('click', function() {
 document.getElementById('btn-submit-answer').addEventListener('click', submitAnswer);
 document.getElementById('btn-submit-guess').addEventListener('click', submitGuess);
 document.getElementById('btn-fetch-results').addEventListener('click', fetchResults);
+
+if (window.location.protocol === 'file:') {
+  document.getElementById('file-warning').style.display = 'block';
+}

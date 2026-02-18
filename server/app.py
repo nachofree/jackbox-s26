@@ -139,13 +139,20 @@ def _err(message, details=None, status=400):
 # -----------------------------------------------------------------------------
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "templates"))
 
-# CORS for local development
+# CORS for local development and ngrok (preflight + response headers)
 @app.after_request
 def cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
+
+
+@app.before_request
+def cors_preflight():
+    if request.method == "OPTIONS":
+        resp = app.make_default_options_response()
+        return resp
 
 
 @app.route("/")
