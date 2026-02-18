@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Majority Rules – TV</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #a0a0ff; }
+    .phase { font-size: 1.2rem; opacity: 0.9; margin-bottom: 2rem; }
+    .prompt {
+      font-size: 2.5rem;
+      max-width: 800px;
+      text-align: center;
+      margin-bottom: 2rem;
+      line-height: 1.3;
+    }
+    .meta { font-size: 1.2rem; opacity: 0.8; }
+    .countdown { font-size: 3rem; font-weight: bold; color: #7fdbff; margin: 1rem 0; }
+    .results { text-align: left; max-width: 600px; width: 100%; margin-top: 2rem; }
+    .results h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .bar-row { margin: 0.5rem 0; display: flex; align-items: center; gap: 1rem; }
+    .bar-label { flex: 0 0 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-wrap { flex: 1; height: 28px; background: #333; border-radius: 4px; overflow: hidden; }
+    .bar { height: 100%; background: linear-gradient(90deg, #3d5a80, #7fdbff); border-radius: 4px; transition: width 0.3s; }
+    .bar-pct { flex: 0 0 60px; text-align: right; }
+    .majority { color: #7fdbff; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Majority Rules</h1>
+  <p class="phase" id="phase">—</p>
+  <p class="prompt" id="prompt">—</p>
+  <p class="meta" id="meta">—</p>
+  <p class="countdown" id="countdown"></p>
+  <div class="results" id="results" hidden></div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let pollTimer = null;
+
+    function formatEndsAt(iso) {
+      if (!iso) return null;
+      const end = new Date(iso);
+      const now = new Date();
+      const sec = Math.max(0, Math.ceil((end - now) / 1000));
+      return sec;
+    }
+
+    function poll() {
+      fetch(API_BASE + '/api/state')
+        .then(r => r.json())
+        .then(data => {
+          const phaseEl = document.getElementById('phase');
+          const promptEl = document.getElementById('prompt');
+          const metaEl = document.getElementById('meta');
+          const countEl = document.getElementById('countdown');
+          const resultsEl = document.getElementById('results');
+
+          phaseEl.textContent = 'Phase: ' + data.phase + '  ·  Round ' + data.round_id + ' / ' + data.round_total;
+          promptEl.textContent = data.prompt || '—';
+          metaEl.textContent = data.players_connected + ' players · ' + data.answers_received + ' answers';
+
+          let sec = data.phase === 'ANSWER' || data.phase === 'GUESS' ? formatEndsAt(data.ends_at) : null;
+          if (sec !== null) {
+            countEl.hidden = false;
+            countEl.textContent = sec + 's';
+          } else {
+            countEl.hidden = true;
+          }
+
+          if (data.phase === 'RESULTS' && data.round_id >= 1) {
+            resultsEl.hidden = false;
+            fetch(API_BASE + '/api/results?round_id=' + data.round_id)
+              .then(r => r.json())
+              .then(res => {
+                let html = '<h2>Results – Round ' + res.round_id + '</h2><p><strong>' + res.prompt + '</strong></p>';
+                res.breakdown.forEach(b => {
+                  const isMaj = res.majority_answers && res.majority_answers.includes(b.answer);
+                  html += '<div class="bar-row">' +
+                    '<span class="bar-label' + (isMaj ? ' majority' : '') + '">' + escapeHtml(b.answer) + '</span>' +
+                    '<div class="bar-wrap"><div class="bar" style="width:' + b.pct + '%"></div></div>' +
+                    '<span class="bar-pct">' + b.pct + '%</span></div>';
+                });
+                resultsEl.innerHTML = html;
+              })
+              .catch(() => { resultsEl.innerHTML = '<p>Could not load results.</p>'; });
+          } else {
+            resultsEl.hidden = true;
+          }
+        })
+        .catch(() => {
+          document.getElementById('phase').textContent = 'Could not load state';
+        });
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    poll();
+    pollTimer = setInterval(poll, 2000);
+  </script>
+</body>
+</html>

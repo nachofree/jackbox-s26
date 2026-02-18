@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Majority Rules – Student</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 1.5rem;
+    }
+    h1 { font-size: 1.5rem; color: #a0a0ff; }
+    section { margin: 1.5rem 0; }
+    label { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; opacity: 0.9; }
+    input[type="text"] {
+      width: 100%;
+      max-width: 320px;
+      padding: 0.5rem;
+      font-size: 1rem;
+      background: #2a2a4a;
+      border: 1px solid #444;
+      color: #eee;
+      border-radius: 4px;
+    }
+    button {
+      background: #3d5a80;
+      color: #eee;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover { background: #4a6a90; }
+    .status { font-size: 0.9rem; opacity: 0.85; margin-top: 0.5rem; }
+    .error { color: #ff7f7f; }
+    .phase { font-weight: bold; margin-bottom: 0.5rem; }
+    #results { white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Majority Rules</h1>
+
+  <section id="join-section">
+    <label for="name">Your name</label>
+    <input type="text" id="name" placeholder="e.g. Alice" maxlength="80">
+    <button type="button" id="btn-join">Join game</button>
+    <p class="status" id="join-status"></p>
+  </section>
+
+  <section id="game-section" hidden>
+    <p class="phase" id="phase-display">—</p>
+    <p id="prompt-display">—</p>
+
+    <div id="answer-area" hidden>
+      <label for="answer">Your answer</label>
+      <input type="text" id="answer" placeholder="Type your answer..." maxlength="80">
+      <button type="button" id="btn-submit-answer">Submit answer</button>
+      <p class="status" id="answer-status"></p>
+    </div>
+
+    <div id="guess-area" hidden>
+      <label for="guess">Your guess (which answer will be most common?)</label>
+      <input type="text" id="guess" placeholder="Type your guess..." maxlength="80">
+      <button type="button" id="btn-submit-guess">Submit guess</button>
+      <p class="status" id="guess-status"></p>
+    </div>
+
+    <div id="results-area" hidden>
+      <button type="button" id="btn-fetch-results">Load results</button>
+      <pre id="results"></pre>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
