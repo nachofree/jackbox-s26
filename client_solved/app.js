@@ -25,19 +25,15 @@ function joinGame(name) {
   })
     .then(function (response) {
       return response.json().then(function (data) {
-        if (response.ok && data.player_id) {
+        if (data.player_id) {
           playerId = data.player_id;
           playerName = data.name;
           onJoined();
           startPolling();
-        } else {
-          showJoinError(data.error || 'Join failed');
         }
       });
     })
-    .catch(function (err) {
-      showJoinError(err.message || 'Join failed');
-    });
+    .catch(function () {});
 }
 
 function onJoined() {
@@ -47,35 +43,12 @@ function onJoined() {
   document.getElementById('join-status').className = 'status';
 }
 
-function showJoinError(message) {
-  const el = document.getElementById('join-status');
-  el.textContent = message;
-  el.className = 'status error';
-}
-
 // -----------------------------------------------------------------------------
 // pollState()
 // -----------------------------------------------------------------------------
 function pollState() {
   fetch(API_BASE + '/api/state', { headers: NGROK_HEADER })
-    .then(function (response) {
-      return response.text().then(function (text) {
-        var data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.warn('pollState: server returned non-JSON (status ' + response.status + '). First 300 chars:', text.slice(0, 300));
-          if (text.indexOf('ngrok') !== -1) {
-            throw new Error('Ngrok interstitial: API request got the warning page. Open ' + API_BASE + '/api/state in this tab, click through if needed, then refresh the app.');
-          }
-          throw new Error('Server returned non-JSON. Check console for response body.');
-        }
-        if (!response.ok) {
-          throw new Error(data.error || 'Request failed');
-        }
-        return data;
-      });
-    })
+    .then(function (response) { return response.json(); })
     .then(function (data) {
       currentRoundId = data.round_id;
 
@@ -87,11 +60,7 @@ function pollState() {
       document.getElementById('guess-area').hidden = data.phase !== 'GUESS';
       document.getElementById('results-area').hidden = data.phase !== 'RESULTS';
     })
-    .catch(function (err) {
-      document.getElementById('phase-display').textContent = err.message || 'Could not load state';
-      document.getElementById('phase-display').title = err.message || '';
-      console.warn('pollState failed:', err);
-    });
+    .catch(function () {});
 }
 
 function startPolling() {
@@ -105,7 +74,6 @@ function startPolling() {
 // -----------------------------------------------------------------------------
 function submitAnswer() {
   const answer = document.getElementById('answer').value.trim();
-  if (!answer) return;
   const statusEl = document.getElementById('answer-status');
 
   fetch(API_BASE + '/api/answer', {
@@ -117,22 +85,13 @@ function submitAnswer() {
       answer: answer,
     }),
   })
-    .then(function (response) {
-      return response.json().then(function (data) {
-        if (response.ok) {
-          document.getElementById('answer').value = '';
-          statusEl.textContent = 'Answer submitted';
-          statusEl.className = 'status';
-        } else {
-          statusEl.textContent = data.error || 'Submit failed';
-          statusEl.className = 'status error';
-        }
-      });
+    .then(function (response) { return response.json(); })
+    .then(function () {
+      document.getElementById('answer').value = '';
+      statusEl.textContent = 'Answer submitted';
+      statusEl.className = 'status';
     })
-    .catch(function (err) {
-      statusEl.textContent = err.message || 'Submit failed';
-      statusEl.className = 'status error';
-    });
+    .catch(function () {});
 }
 
 // -----------------------------------------------------------------------------
@@ -140,7 +99,6 @@ function submitAnswer() {
 // -----------------------------------------------------------------------------
 function submitGuess() {
   const guess = document.getElementById('guess').value.trim();
-  if (!guess) return;
   const statusEl = document.getElementById('guess-status');
 
   fetch(API_BASE + '/api/guess', {
@@ -152,22 +110,13 @@ function submitGuess() {
       guess: guess,
     }),
   })
-    .then(function (response) {
-      return response.json().then(function (data) {
-        if (response.ok) {
-          document.getElementById('guess').value = '';
-          statusEl.textContent = 'Guess submitted';
-          statusEl.className = 'status';
-        } else {
-          statusEl.textContent = data.error || 'Submit failed';
-          statusEl.className = 'status error';
-        }
-      });
+    .then(function (response) { return response.json(); })
+    .then(function () {
+      document.getElementById('guess').value = '';
+      statusEl.textContent = 'Guess submitted';
+      statusEl.className = 'status';
     })
-    .catch(function (err) {
-      statusEl.textContent = err.message || 'Submit failed';
-      statusEl.className = 'status error';
-    });
+    .catch(function () {});
 }
 
 // -----------------------------------------------------------------------------
@@ -177,18 +126,11 @@ function fetchResults() {
   const resultsEl = document.getElementById('results');
 
   fetch(API_BASE + '/api/results?round_id=' + currentRoundId, { headers: NGROK_HEADER })
-    .then(function (response) {
-      return response.json().then(function (data) {
-        if (response.ok) {
-          resultsEl.textContent = JSON.stringify(data, null, 2);
-        } else {
-          resultsEl.textContent = data.error || 'Results not available yet.';
-        }
-      });
+    .then(function (response) { return response.json(); })
+    .then(function (data) {
+      resultsEl.textContent = JSON.stringify(data, null, 2);
     })
-    .catch(function (err) {
-      resultsEl.textContent = err.message || 'Could not load results.';
-    });
+    .catch(function () {});
 }
 
 // -----------------------------------------------------------------------------
@@ -196,10 +138,6 @@ function fetchResults() {
 // -----------------------------------------------------------------------------
 document.getElementById('btn-join').addEventListener('click', function () {
   const name = document.getElementById('name').value.trim();
-  if (!name) {
-    showJoinError('Enter your name');
-    return;
-  }
   joinGame(name);
 });
 

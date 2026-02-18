@@ -144,8 +144,10 @@ app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "t
 def cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
+
 
 
 @app.before_request
@@ -210,6 +212,7 @@ def api_join():
     if not name:
         return _err("Name cannot be empty after sanitization")
     player_id = str(uuid.uuid4())
+    print(f"Player {name} joined with ID {player_id}")
     _state["players"][player_id] = {"name": name, "score": 0}
     return jsonify({"player_id": player_id, "name": name})
 
@@ -275,6 +278,7 @@ def api_answer():
     if player_id in _state["answers"][round_id]:
         return _err("Already submitted an answer for this round", status=409)
     _state["answers"][round_id][player_id] = answer
+    print(f"Answer {answer} submitted by player {player_id} for round {round_id}")
     return jsonify({"ok": True, "round_id": round_id})
 
 
@@ -316,6 +320,7 @@ def api_guess():
     if player_id in _state["guesses"][round_id]:
         return _err("Already submitted a guess for this round", status=409)
     _state["guesses"][round_id][player_id] = guess
+    print(f"Guess {guess} submitted by player {player_id} for round {round_id}")
     return jsonify({"ok": True, "round_id": round_id})
 
 
@@ -478,6 +483,12 @@ def api_admin_next_round():
 def api_admin_reset():
     _reset_state()
     return jsonify({"ok": True})
+
+
+@app.route("/<path:path>")
+def root_client_static(path):
+    """Serve client static files (e.g. /app.js) when opening the app from / ."""
+    return send_from_directory(_client_dir(), path)
 
 
 if __name__ == "__main__":
