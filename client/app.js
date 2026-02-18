@@ -1,6 +1,6 @@
 /**
  * Majority Rules – Student client
- * Complete the TODO blocks by implementing fetch() calls to the API.
+ * Complete the TODO blocks by implementing fetch() calls using .then() and .catch() only.
  * Use the API_BASE constant; do not hardcode localhost elsewhere.
  */
 
@@ -20,7 +20,7 @@ let pollInterval = null;
 // On success: store player_id and name, then call onJoined() and start polling.
 // On error: call showJoinError(message).
 // -----------------------------------------------------------------------------
-async function joinGame(name) {
+function joinGame(name) {
   // TODO: use fetch() to POST to API_BASE + '/api/join'
   // Body: JSON.stringify({ name: name })
   // Headers: { 'Content-Type': 'application/json' }
@@ -30,7 +30,7 @@ async function joinGame(name) {
   //   onJoined();
   //   startPolling();
   // On error response (e.g. !response.ok), read JSON and call showJoinError(data.error || 'Join failed');
-  throw new Error('TODO: implement joinGame()');
+  showJoinError('TODO: implement joinGame()');
 }
 
 function onJoined() {
@@ -51,13 +51,12 @@ function showJoinError(message) {
 // GET /api/state – returns phase, round_id, round_total, prompt, etc.
 // Update the UI: phase display, prompt display, show/hide answer/guess/results areas.
 // -----------------------------------------------------------------------------
-async function pollState() {
+function pollState() {
   // TODO: use fetch() to GET API_BASE + '/api/state'
   // Parse JSON, then update:
   //   document.getElementById('phase-display').textContent = 'Phase: ' + data.phase + '  Round ' + data.round_id + '/' + data.round_total;
   //   document.getElementById('prompt-display').textContent = data.prompt || '—';
   //   Show/hide #answer-area (phase === 'ANSWER'), #guess-area (phase === 'GUESS'), #results-area (phase === 'RESULTS')
-  throw new Error('TODO: implement pollState()');
 }
 
 function startPolling() {
@@ -74,7 +73,7 @@ function startPolling() {
 // -----------------------------------------------------------------------------
 let currentRoundId = null; // set this in pollState() from data.round_id
 
-async function submitAnswer() {
+function submitAnswer() {
   const answer = document.getElementById('answer').value.trim();
   if (!answer) return;
   // TODO: use fetch() to POST to API_BASE + '/api/answer'
@@ -82,7 +81,6 @@ async function submitAnswer() {
   // Headers: { 'Content-Type': 'application/json' }
   // On success: clear input, set #answer-status to "Answer submitted"
   // On error (e.g. 409): read JSON and show data.error in #answer-status with class "status error"
-  throw new Error('TODO: implement submitAnswer()');
 }
 
 // -----------------------------------------------------------------------------
@@ -90,7 +88,7 @@ async function submitAnswer() {
 // POST /api/guess with body: { player_id, round_id, guess }
 // On success: clear guess input and show "Guess submitted". On error: show error in #guess-status.
 // -----------------------------------------------------------------------------
-async function submitGuess() {
+function submitGuess() {
   const guess = document.getElementById('guess').value.trim();
   if (!guess) return;
   // TODO: use fetch() to POST to API_BASE + '/api/guess'
@@ -98,7 +96,6 @@ async function submitGuess() {
   // Headers: { 'Content-Type': 'application/json' }
   // On success: clear input, set #guess-status to "Guess submitted"
   // On error: show data.error in #guess-status with class "status error"
-  throw new Error('TODO: implement submitGuess()');
 }
 
 // -----------------------------------------------------------------------------
@@ -106,11 +103,10 @@ async function submitGuess() {
 // GET /api/results?round_id=<currentRoundId>
 // Display the returned breakdown and majority_answers in #results (e.g. JSON.stringify(data, null, 2)).
 // -----------------------------------------------------------------------------
-async function fetchResults() {
+function fetchResults() {
   // TODO: use fetch() to GET API_BASE + '/api/results?round_id=' + currentRoundId
   // Parse JSON, then set document.getElementById('results').textContent = JSON.stringify(data, null, 2);
   // On error (e.g. 409): show message that results are not available yet
-  throw new Error('TODO: implement fetchResults()');
 }
 
 // -----------------------------------------------------------------------------
